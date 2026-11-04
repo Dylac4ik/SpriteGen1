@@ -1,0 +1,46 @@
+{
+  "name": "spritegen",
+  "productName": "SpriteGen",
+  "version": "0.1.0",
+  "description": "Desktop app that generates pixel-art sprites from text prompts at exact native sizes (8x8 to 512x512).",
+  "author": "SpriteGen contributors",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc -p tsconfig.e2e.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build && playwright test -c playwright.config.ts",
+    "icon": "node scripts/make-icon.mjs",
+    "dist": "npm run build && electron-builder",
+    "dist:dir": "npm run build && electron-builder --dir",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac"
+  },
+  "dependencies": {
+    "pngjs": "7.0.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.19.1",
+    "@types/pngjs": "6.0.5",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.10.2",
+    "electron-builder": "26.0.12",
+    "electron-vite": "4.0.1",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.7",
+    "zustand": "5.0.8"
+  }
+}
