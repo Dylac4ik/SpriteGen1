@@ -7,7 +7,8 @@ import { createFilterStep } from '../../src/core/filters';
 import { DEFAULT_CONVERSION } from '../../src/core/pixelize';
 import { DEFAULT_TECHNICAL } from '../../src/core/prompt/compose';
 import type { ProjectData } from '../../src/shared/types';
-import { parseProject, readProjectFile, serializeProject, writeProjectFile } from '../../src/main/projectIo';
+import { parseProject, serializeProject } from '../../src/backend/project';
+import { readProjectFile, writeProjectFile } from '../../src/main/projectIo';
 
 function project(): ProjectData {
   const original = createImage(16, 16);

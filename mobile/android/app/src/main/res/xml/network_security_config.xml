@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plain HTTP is permitted only so a self-hosted Stable Diffusion WebUI on the local network
+  (e.g. http://192.168.1.20:7860) can be reached. Cloud providers always use HTTPS, and the
+  app refuses to send an API key over plain HTTP to anything but localhost.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -328,7 +328,7 @@ function StatusBar() {
   );
 }
 
-function GenerationStatus() {
+export function GenerationStatus() {
   const job = useApp((s) => s.job);
   const error = useApp((s) => s.lastError);
   const warnings = useApp((s) => s.lastWarnings);

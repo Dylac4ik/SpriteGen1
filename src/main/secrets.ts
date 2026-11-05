@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import { AppError } from '@shared/errors';
+import type { KeySource, SecretStoreLike } from '@backend/secrets';
 import { writeFileAtomic, readFileIfExists } from './fsUtil';
 
 /** Subset of Electron's safeStorage used here (injectable for tests). */
@@ -10,7 +11,7 @@ export interface SafeStorageLike {
   getSelectedStorageBackend?(): string;
 }
 
-export type KeySource = 'keychain' | 'session' | 'env';
+export type { KeySource };
 
 /**
  * API-key storage. Keys are encrypted with the OS credential store via Electron
@@ -21,7 +22,7 @@ export type KeySource = 'keychain' | 'session' | 'env';
  * ("basic_text"), which is NOT secure; in that case persistence is refused and keys
  * are kept in memory for the session only.
  */
-export class SecretStore {
+export class SecretStore implements SecretStoreLike {
   private session = new Map<string, string>();
   private cache: Record<string, string> | null = null;
 

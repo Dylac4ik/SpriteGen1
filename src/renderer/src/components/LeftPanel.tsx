@@ -19,7 +19,8 @@ const SECTION_CHIPS: { label: string; insert: string; tip: string }[] = [
   { label: 'Animation', insert: 'Animation: ', tip: 'Game role: idle frame, walk-cycle keyframe, item icon, tile…' },
 ];
 
-export function LeftPanel() {
+/** `showShortcuts` is false on touch devices, where keyboard hints do not apply. */
+export function LeftPanel({ showShortcuts = true }: { showShortcuts?: boolean }) {
   const form = useApp((s) => s.form);
   const setForm = useApp((s) => s.setForm);
   const providers = useApp((s) => s.providers);
@@ -119,7 +120,7 @@ export function LeftPanel() {
             aria-describedby={`${ids.prompt}-help`}
           />
           <div id={`${ids.prompt}-help`} className="hint row-between">
-            <span>Free text or labeled lines (e.g. “Style: …”). Ctrl+Enter generates.</span>
+            <span>Free text or labeled lines (e.g. “Style: …”).{showShortcuts ? ' Ctrl+Enter generates.' : ''}</span>
             <span className={form.prompt.length > MAX_PROMPT_LENGTH * 0.9 ? 'warn' : ''}>
               {form.prompt.length}/{MAX_PROMPT_LENGTH}
             </span>
@@ -319,7 +320,7 @@ export function LeftPanel() {
             className="btn primary wide"
             onClick={() => void generate()}
             disabled={!form.prompt.trim() || (!form.randomizeSeed && seedInvalid)}
-            title="Generate (Ctrl+Enter)"
+            title={showShortcuts ? 'Generate (Ctrl+Enter)' : undefined}
           >
             Generate {form.variations > 1 ? `${form.variations} variations` : 'sprite'}
           </button>

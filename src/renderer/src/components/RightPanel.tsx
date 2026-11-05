@@ -7,7 +7,7 @@ import { AnalysisPanel } from './AnalysisPanel';
 import { FilterPanel } from './FilterPanel';
 import { Thumbnail } from './Thumbnail';
 
-function PropertiesPanel() {
+export function PropertiesPanel() {
   const selected = useSelected();
   const images = useDisplayImages(selected?.variation);
   const setEditor = useApp((s) => s.setEditor);

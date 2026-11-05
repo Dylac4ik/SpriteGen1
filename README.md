@@ -1,6 +1,6 @@
 # SpriteGen
 
-SpriteGen is a desktop app that generates pixel-art sprites from text prompts, starting from a blank canvas. Every sprite comes out at an exact native square size: **8×8, 16×16, 32×32, 64×64, 128×128, 256×256 or 512×512**. You then inspect it pixel by pixel, edit it, run non-destructive filters on it, and export it as a transparent PNG.
+SpriteGen generates pixel-art sprites from text prompts, starting from a blank canvas. It runs as a **desktop app** (Windows, macOS, Linux) and as a **mobile app** (Android and iOS; see [docs/MOBILE.md](docs/MOBILE.md)), and both share the same generation, conversion and editing code. Every sprite comes out at an exact native square size: **8×8, 16×16, 32×32, 64×64, 128×128, 256×256 or 512×512**. You then inspect it pixel by pixel, edit it, run non-destructive filters on it, and export it as a transparent PNG.
 
 ![SpriteGen main window](docs/screenshots/04-generated.png)
 
@@ -17,6 +17,7 @@ SpriteGen is a desktop app that generates pixel-art sprites from text prompts, s
 - [Security](#security)
 - [Development](#development)
 - [Building and packaging](#building-and-packaging)
+- [Mobile app (Android & iOS)](#mobile-app-android--ios)
 - [Architecture](#architecture)
 - [Known limitations](#known-limitations)
 
@@ -130,6 +131,7 @@ The exact path is shown in Settings → Preferences. Projects are saved wherever
 - **API keys never reach the UI process.** They live only in the main process. The renderer only learns *whether* a key is configured and where it came from.
 - **OS credential storage.** Keys are encrypted with Electron `safeStorage` (macOS Keychain, Windows DPAPI, Linux libsecret/KWallet), and only the ciphertext is written (`secrets.json`). On Linux without a keyring, Electron falls back to an insecure built-in password (`basic_text`). SpriteGen detects this and **refuses to persist**: the key is kept in memory for the session only, or you can use an environment variable.
 - **No secrets in source.** Nothing is hard-coded, and keys are excluded from logs, projects and error messages.
+- **Keys only over HTTPS.** A provider base URL that would send an API key over plain `http://` to anything other than `localhost` is rejected.
 - **Hardened Electron.** `contextIsolation`, `sandbox` and `nodeIntegration: false` are set. A narrow typed preload bridge is the only API. IPC messages from other origins are rejected, and every IPC payload is validated with zod in the main process. A strict Content-Security-Policy is applied (relaxed only on the dev server for hot reload). In-app navigation and new windows are blocked; `https` links open in the system browser.
 - **Untrusted input is validated.** This covers prompts, seeds, sizes, filter parameters, provider responses, project files (schema plus decoding and size checks for every image) and export requests.
 
@@ -137,8 +139,8 @@ The exact path is shown in Settings → Preferences. Projects are saved wherever
 
 ```bash
 npm run dev          # app with hot reload (electron-vite)
-npm test             # unit tests (vitest): core, main process, renderer logic
-npm run typecheck    # TypeScript for main/preload/core, renderer, and e2e
+npm test             # unit tests (vitest): core, backend, desktop main process, renderer logic, mobile platform
+npm run typecheck    # TypeScript for main/preload/core/backend, renderer, mobile, and e2e
 npm run test:e2e     # builds, then drives the real Electron app with Playwright
 ```
 
@@ -194,27 +196,53 @@ npm run dist:mac     # .dmg + .zip (build on macOS)
 
 Packaging uses [electron-builder](https://www.electron.build/) with `electron-builder.yml`. **Code signing and notarization are not configured.** Add your certificates via electron-builder's standard environment variables (`CSC_LINK`, `CSC_KEY_PASSWORD`, Apple notarization credentials) before distributing. In this repository, the Linux unpacked build was produced and passes the full end-to-end suite. Windows and macOS targets are configured but were not built here.
 
+## Mobile app (Android & iOS)
+
+The mobile app is a touch-first version of SpriteGen, built with Capacitor. It has four tabs: **Create**, **Editor**, **Library** and **Settings**.
+
+- **Same engine as desktop:** providers, exact native sizes, the conversion pipeline, the smart prompt viewer, the style warning, filters and presets, undo/redo, projects and export.
+- **Touch editing:** one-finger drawing, two-finger pinch zoom and pan, and bottom sheets.
+- **Device integration:** the share sheet for PNG and project export, and the iOS Keychain or Android Keystore for API keys.
+
+![SpriteGen mobile editor](docs/screenshots/mobile-04-editor.png)
+
+```bash
+npm run mobile:dev        # mobile UI in the browser (hot reload)
+npm run test:mobile-e2e   # touch workflow on phone + tablet viewports
+npm run mobile:apk        # debug APK (needs JDK 21 + Android SDK 36)
+npm run mobile:ios        # open the Xcode project (macOS)
+```
+
+Requirements, release signing, local-network WebUI setup and verification status are in [docs/MOBILE.md](docs/MOBILE.md).
+
 ## Architecture
 
 ```
 src/
   core/       Pure TypeScript, no Node/DOM: image model, nearest-neighbor resize, filters,
               quantize/dither, pixel conversion pipeline, prompt analysis & composition,
-              procedural mock sprites. Shared by main and renderer; heavily unit-tested.
-  shared/     Types, IPC contract, zod schemas, error model.
-  main/       Electron main process: window/menu, IPC handlers, GenerationService,
+              procedural mock sprites. Heavily unit-tested.
+  shared/     Types, the SpriteGenApi contract, zod schemas, error model.
+  backend/    Platform-neutral engine used by desktop AND mobile: GenerationService,
               ProviderService, providers/ (mock, openai, stability, automatic1111),
-              PNG codec, secrets (safeStorage), preferences, project I/O, export.
+              pure-JS PNG codec, project file codec, export preparation, preferences.
+  main/       Electron main process: window/menu, IPC handlers, file dialogs/IO,
+              secrets (safeStorage), preferences file, clipboard.
   preload/    contextBridge API (window.spriteGen) — the renderer's only capability.
   renderer/   React UI + zustand store (left/center/right/bottom panels, dialogs).
-tests/        core/, main/, renderer/ unit tests (vitest) and e2e/ (Playwright + Electron).
-docs/         ARCHITECTURE.md, PIXEL_PIPELINE.md, PROVIDERS.md, screenshots/.
+  mobile/     Mobile shell (tabs, touch canvas, library) + platform layer that implements
+              SpriteGenApi in-app on Capacitor plugins.
+mobile/       Native Android and iOS projects (Capacitor).
+tests/        core/, backend/, main/, renderer/, mobile/ unit tests (vitest);
+              e2e/ (Playwright + Electron) and mobile-e2e/ (Playwright touch emulation).
+docs/         ARCHITECTURE.md, PIXEL_PIPELINE.md, PROVIDERS.md, MOBILE.md, screenshots/.
 ```
 
-There are two key design points:
+There are three key design points:
 
-1. **One source of truth for prompts.** `composeFinalPrompt` in `src/core/prompt/compose.ts` builds the preview shown in the prompt viewer *and* the prompt the main process sends, so the viewer is exact.
-2. **Provider interface.** Each backend declares its capabilities (seed, negative prompt, native transparency, working size) and its settings/controls as data. The UI renders from those declarations, and the generation service applies the same conversion and validation to every backend.
+1. **One engine, two shells.** Desktop and mobile implement the same `SpriteGenApi` contract. Desktop implements it in the Electron main process over IPC; mobile implements it inside the app. Both are built on `src/backend`, so generation, validation and file formats are identical.
+2. **One source of truth for prompts.** `composeFinalPrompt` in `src/core/prompt/compose.ts` builds the preview shown in the prompt viewer *and* the prompt the main process sends, so the viewer is exact.
+3. **Provider interface.** Each backend declares its capabilities (seed, negative prompt, native transparency, working size) and its settings/controls as data. The UI renders from those declarations, and the generation service applies the same conversion and validation to every backend.
 
 Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -233,4 +261,5 @@ Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Presets are global.** They live in preferences, not inside project files.
 - **Sprite sheets are simple grids.** There is no padding option and no animation/atlas metadata.
 - **No code signing, auto-update or `.spritegen` file association.**
+- **Mobile builds are only partly verified.** The mobile UI is tested in a browser with touch emulation, and the Android project compiles, but the app has not been run on a real phone or emulator here, and the iOS project has not been built (it needs Xcode). See [docs/MOBILE.md](docs/MOBILE.md#verification-status).
 - **Platform coverage.** Developed and tested on Linux (Xvfb). Windows/macOS should work (Electron, standard APIs) but were not run here. On Linux, persisting keys requires a Secret Service keyring (GNOME Keyring or KWallet).

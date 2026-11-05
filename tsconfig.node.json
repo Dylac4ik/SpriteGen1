@@ -14,11 +14,15 @@
     "vitest.config.ts",
     "src/main/**/*",
     "src/preload/**/*",
+    "src/backend/**/*",
     "src/core/**/*",
     "src/shared/**/*",
     "tests/core/**/*",
+    "tests/backend/**/*",
     "tests/main/**/*",
     "tests/renderer/**/*",
-    "src/renderer/src/store/docHistory.ts"
+    "src/renderer/src/store/docHistory.ts",
+    "vite.mobile.config.ts",
+    "capacitor.config.ts"
   ]
 }

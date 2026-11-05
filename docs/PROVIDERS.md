@@ -1,6 +1,6 @@
 # Generation providers
 
-All backends implement `GenerationProvider` (`src/main/providers/types.ts`) and are registered in `src/main/providers/registry.ts`. The UI is generated from each provider's declarations, so adding one needs no renderer changes.
+All backends implement `GenerationProvider` (`src/backend/providers/types.ts`) and are registered in `src/backend/providers/registry.ts`. The UI is generated from each provider's declarations, so adding one needs no renderer changes.
 
 ```ts
 interface GenerationProvider {
@@ -36,13 +36,13 @@ It returns decoded `RgbaImage`s at any working resolution. `GenerationService` d
 | `stability` | `POST {baseUrl}/v2beta/stable-image/generate/{core\|ultra}` | `multipart/form-data` with `prompt`, `negative_prompt`, `aspect_ratio: 1:1`, `output_format: png`, `seed`, and an optional `style_preset` (Core only, never sent by default). One request per variation. `finish_reason: CONTENT_FILTERED` maps to `content_policy`. |
 | `automatic1111` | `POST {baseUrl}/sdapi/v1/txt2img` | `prompt`, `negative_prompt`, `seed`, `steps`, `cfg_scale`, `sampler_name`, `width/height` (working size 512/768/1024) and `batch_size`. Seeds come back from `info.all_seeds`; extra images such as grids are ignored. Requires the WebUI started with `--api`. |
 
-All HTTP goes through `httpRequest()` (`src/main/providers/http.ts`). It maps transport errors to `network`, non-2xx responses to categorized `AppError`s, and makes every request abortable. In the app, `fetch` is Electron's `net.fetch`, which honors the system proxy and certificate settings.
+All HTTP goes through `httpRequest()` (`src/backend/providers/http.ts`). It maps transport errors to `network`, non-2xx responses to categorized `AppError`s, and makes every request abortable. On desktop, `fetch` is Electron's `net.fetch`, which honors the system proxy and certificate settings. On mobile it is the native HTTP stack (CapacitorHttp, `src/mobile/platform/nativeFetch.ts`), so providers run unchanged on phones. Providers that send an API key must pass `{ carriesApiKey: true }` to `validateBaseUrl`, which refuses plain HTTP to non-local hosts.
 
 ## Adding a provider
 
-1. Create `src/main/providers/myprovider.ts` that implements `GenerationProvider`. Decode images with `decodePng` / `decodeBase64Png` from `../png`, which validate the format and dimensions.
+1. Create `src/backend/providers/myprovider.ts` that implements `GenerationProvider`. Decode images with `decodePng` / `decodeBase64Png` from `../png`, which validate the format and dimensions.
 2. Declare honest capabilities. If the backend can't do something (seeds, negative prompt, alpha), say so: the UI and prompt composer adapt, and the user is told.
 3. Add it to `createDefaultRegistry()`.
-4. Add tests modeled on `tests/main/providers.test.ts`. Use a fake `fetch` to check the request shape, response parsing and error mapping.
+4. Add tests modeled on `tests/backend/providers.test.ts`. Use a fake `fetch` to check the request shape, response parsing and error mapping.
 
 Never hard-code keys. If the provider needs a key, set `requiresApiKey: true` and `apiKeyEnvVar`. The settings dialog then offers secure storage automatically.

@@ -12,6 +12,7 @@
   },
   "include": [
     "tests/e2e/**/*",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright.mobile.config.ts"
   ]
 }

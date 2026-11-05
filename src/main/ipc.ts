@@ -7,13 +7,13 @@ import type { AppInfo, ExportPngRequest, ExportSheetRequest, Preferences, Projec
 import { spriteImageSchema, exportScaleSchema, formatZodError } from '@shared/schemas';
 import { normalizeImage } from '@core/image';
 import { scaleNearestInteger } from '@core/resize';
-import type { GenerationService } from './generation';
-import type { ProviderService } from './providerService';
+import type { GenerationService } from '@backend/generation';
+import type { ProviderService } from '@backend/providerService';
 import type { PreferencesStore } from './preferences';
 import type { SecretStore } from './secrets';
 import { PROJECT_EXTENSION, readProjectFile, writeProjectFile } from './projectIo';
-import { prepareSheetExport, prepareSpriteExport, type PreparedExport } from './exporter';
-import { encodePng } from './png';
+import { prepareSheetExport, prepareSpriteExport, type PreparedExport } from '@backend/exporter';
+import { encodePng } from '@backend/png';
 import { readFileIfExists, writeFileAtomic } from './fsUtil';
 
 export interface IpcDeps {
@@ -183,7 +183,7 @@ export function registerIpc(deps: IpcDeps): void {
       // Electron < 44 exposes writeImage(NativeImage); Electron 44+ uses the async W3C-style write().
       const legacy = clipboard as unknown as { writeImage?: (i: Electron.NativeImage) => void };
       if (typeof legacy.writeImage === 'function') {
-        const ni = nativeImage.createFromBuffer(png);
+        const ni = nativeImage.createFromBuffer(Buffer.from(png));
         if (ni.isEmpty()) throw new AppError('unknown', 'The system could not create a clipboard image.');
         legacy.writeImage(ni);
       } else {

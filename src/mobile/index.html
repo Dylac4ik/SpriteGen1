@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#15161c" />
+    <meta name="color-scheme" content="dark light" />
+    <!--
+      Capacitor's Android bridge injects its script immediately after <head>, before this
+      policy takes effect, so the strict script-src does not block it. connect-src allows the
+      browser build to reach provider APIs directly; native builds use the native HTTP stack.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https: http:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>SpriteGen</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

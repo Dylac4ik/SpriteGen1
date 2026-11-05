@@ -1,22 +1,33 @@
 # Architecture
 
-SpriteGen is an Electron desktop app written in TypeScript. It has four layers with one-way dependencies:
+SpriteGen is written in TypeScript and ships as an Electron desktop app and a Capacitor mobile app. The layers have one-way dependencies:
 
 ```
-renderer (React UI) ──IPC via preload──▶ main (Electron)
-        │                                   │
-        └────────────── core ◀──────────────┘   (pure TS, shared)
-                         ▲
-                       shared (types, IPC contract, zod schemas, errors)
+desktop renderer (React) ──IPC via preload──▶ main (Electron) ──┐
+mobile shell (React) ──── in-app ──▶ mobile platform layer ─────┤
+        │                                                        ▼
+        │                                     backend (providers, generation, PNG/project codecs)
+        └──────────────────────────────▶ core (pure TS) ◀─────┘
+                                           ▲
+                                         shared (types, SpriteGenApi contract, zod schemas, errors)
 ```
+
+Both shells talk to the engine through the same `SpriteGenApi` interface (`src/shared/ipc.ts`):
+
+- **Desktop:** the Electron main process implements it, reached through the preload bridge.
+- **Mobile:** `createMobileBackend()` (`src/mobile/platform/backend.ts`) implements it directly in the app, on top of Capacitor plugins hidden behind the `MobilePlatform` interface.
+
+Because both implementations sit on `src/backend`, the zustand store and most panels are shared.
 
 ## Layers
 
 | Layer | Path | Responsibility | May import |
 | --- | --- | --- | --- |
 | Core | `src/core` | Image model (`RgbaImage`), nearest-neighbor/dominant-color resizing, quantization, dithering, filters + pipeline, pixel conversion (`pixelize`), prompt lexicon/analysis/composition, sprite sheets, editing primitives, procedural mock sprites. **No Node, DOM or Electron APIs**, so it runs in both processes and in tests. | nothing outside core |
+| Backend | `src/backend` | Platform-neutral engine: generation orchestration, provider service and providers, pure-JS PNG codec (fast-png), base64, project-file codec, export preparation, preference sanitizing, the `SecretStoreLike` interface. No Node, DOM or Electron APIs. | core, shared |
+| Mobile | `src/mobile` | Touch UI shell (tabs, gesture canvas, library, settings) and the platform layer: storage, Keychain/Keystore, native HTTP, share sheet. | renderer store/components, backend, core, shared, Capacitor |
 | Shared | `src/shared` | Cross-process types, the `SpriteGenApi` IPC contract and channel names, zod validation schemas, `AppError` / `Result`. | core |
-| Main | `src/main` | Window, native menu, IPC handlers, generation orchestration, providers, PNG codec, secret storage, preferences, project files, export, clipboard. | core, shared, Node, Electron |
+| Main | `src/main` | Window, native menu, IPC handlers, file dialogs and file I/O, safeStorage secret store, preferences file, clipboard. Delegates generation/codecs to backend. | backend, core, shared, Node, Electron |
 | Preload | `src/preload` | Exposes `window.spriteGen` through `contextBridge`. Contains no logic. | shared, Electron renderer APIs |
 | Renderer | `src/renderer` | React UI and zustand store. Talks to main only via `window.spriteGen`. | core, shared, DOM |
 

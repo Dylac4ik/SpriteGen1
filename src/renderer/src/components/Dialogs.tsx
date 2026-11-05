@@ -10,7 +10,7 @@ import { useSelected } from '../store/selectors';
 import { Modal } from './Modal';
 import { ParamControl } from './ParamControl';
 
-function ExportDialog({ mode: initialMode }: { mode: 'sprite' | 'sheet' }) {
+export function ExportDialog({ mode: initialMode }: { mode: 'sprite' | 'sheet' }) {
   const close = useApp((s) => s.closeDialog);
   const exportSprite = useApp((s) => s.exportSprite);
   const exportSheet = useApp((s) => s.exportSheet);
@@ -116,7 +116,7 @@ function ExportDialog({ mode: initialMode }: { mode: 'sprite' | 'sheet' }) {
   );
 }
 
-function ProviderSettings({ providerId, onSelect }: { providerId: string; onSelect(id: string): void }) {
+export function ProviderSettings({ providerId, onSelect }: { providerId: string; onSelect(id: string): void }) {
   const providers = useApp((s) => s.providers);
   const appInfo = useApp((s) => s.appInfo);
   const saveSettings = useApp((s) => s.saveProviderSettings);
@@ -249,7 +249,7 @@ function ProviderSettings({ providerId, onSelect }: { providerId: string; onSele
   );
 }
 
-function PreferencesSettings() {
+export function PreferencesSettings() {
   const prefs = useApp((s) => s.prefs);
   const updatePrefs = useApp((s) => s.updatePrefs);
   const setForm = useApp((s) => s.setForm);
@@ -319,7 +319,7 @@ function SettingsDialog({ tab: initialTab, providerId }: { tab: 'providers' | 'p
   );
 }
 
-function StyleWarningDialog({ analysis }: { analysis: PromptAnalysis }) {
+export function StyleWarningDialog({ analysis }: { analysis: PromptAnalysis }) {
   const close = useApp((s) => s.closeDialog);
   const generate = useApp((s) => s.generate);
   const prompt = useApp((s) => s.form.prompt);
@@ -393,7 +393,7 @@ function StyleWarningDialog({ analysis }: { analysis: PromptAnalysis }) {
   );
 }
 
-function ConfirmDialog(props: { title: string; message: string; confirmLabel: string; danger?: boolean; onConfirm(): void }) {
+export function ConfirmDialog(props: { title: string; message: string; confirmLabel: string; danger?: boolean; onConfirm(): void }) {
   const close = useApp((s) => s.closeDialog);
   return (
     <Modal

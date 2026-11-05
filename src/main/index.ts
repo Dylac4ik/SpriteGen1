@@ -1,14 +1,14 @@
 import { app, BrowserWindow, dialog, Menu, net, safeStorage, shell } from 'electron';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createDefaultRegistry } from './providers/registry';
-import { ProviderService } from './providerService';
-import { GenerationService } from './generation';
+import { createDefaultRegistry } from '@backend/providers/registry';
+import { ProviderService } from '@backend/providerService';
+import { GenerationService } from '@backend/generation';
 import { PreferencesStore } from './preferences';
 import { SecretStore } from './secrets';
 import { registerIpc } from './ipc';
 import { buildMenu } from './menu';
-import type { FetchLike } from './providers/types';
+import type { FetchLike } from '@backend/providers/types';
 
 const isDev = !app.isPackaged && !!process.env.ELECTRON_RENDERER_URL;
 

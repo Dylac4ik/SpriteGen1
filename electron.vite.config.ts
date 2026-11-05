@@ -19,12 +19,14 @@ function devCsp(): Plugin {
 const alias = {
   '@core': resolve(__dirname, 'src/core'),
   '@shared': resolve(__dirname, 'src/shared'),
+  '@backend': resolve(__dirname, 'src/backend'),
   '@renderer': resolve(__dirname, 'src/renderer/src'),
 };
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    // fast-png is ESM-only; bundle it into the CommonJS main process instead of require()-ing it.
+    plugins: [externalizeDepsPlugin({ exclude: ['fast-png'] })],
     resolve: { alias },
   },
   preload: {

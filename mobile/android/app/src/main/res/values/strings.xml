@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SpriteGen</string>
+    <string name="title_activity_main">SpriteGen</string>
+    <string name="package_name">com.spritegen.mobile</string>
+    <string name="custom_url_scheme">com.spritegen.mobile</string>
+</resources>

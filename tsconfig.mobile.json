@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
+    "types": []
+  },
+  "include": [
+    "src/mobile/**/*",
+    "src/renderer/src/**/*",
+    "src/core/**/*",
+    "src/shared/**/*",
+    "src/backend/**/*",
+    "tests/mobile/**/*"
+  ]
+}

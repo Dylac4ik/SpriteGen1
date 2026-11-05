@@ -16,6 +16,7 @@ import type {
   GenerationProgress,
   GenerationRecord,
   GenerationRequest,
+  OpenedProject,
   Preferences,
   ProjectData,
   ProviderDescriptor,
@@ -159,6 +160,9 @@ export interface AppState {
   newProject(force?: boolean): void;
   saveProject(saveAs?: boolean): Promise<void>;
   openProject(force?: boolean): Promise<void>;
+  /** Loads a project that was opened by platform code (e.g. the mobile project library). */
+  loadProject(opened: OpenedProject): void;
+  setProjectName(name: string): void;
   updatePrefs(patch: Partial<Preferences>): Promise<void>;
   saveProviderSettings(id: string, settings: ParamValues): Promise<boolean>;
   setApiKey(id: string, key: string | null, persist: boolean): Promise<boolean>;
@@ -777,6 +781,17 @@ export const useApp = create<AppState>()((set, get) => {
       loadOpened(res.value.project, res.value.path, false);
       toast('success', `Opened ${res.value.path ? basenameNoExt(res.value.path) : 'project'} (${res.value.project.history.length} generations).`);
       res.value.warnings.slice(0, 3).forEach((w) => toast('warning', w));
+    },
+
+    loadProject(opened) {
+      loadOpened(opened.project, opened.path, false);
+      opened.warnings.slice(0, 3).forEach((w) => toast('warning', w));
+    },
+
+    setProjectName(name) {
+      const trimmed = name.trim().slice(0, 120);
+      if (!trimmed || trimmed === get().project.name) return;
+      setProject({ ...get().project, name: trimmed, dirty: true });
     },
 
     async updatePrefs(patch) {
