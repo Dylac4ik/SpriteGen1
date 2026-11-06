@@ -150,7 +150,12 @@ Desktop and mobile share one contract, `SpriteGenApi` in `src/shared/ipc.ts`:
   - PNG export (16×16 with alpha)
   - Library save, rename, new and reopen
   - settings, error banner, seed-reproducible regeneration
-- The Android project compiles to a debug APK with Gradle (see the repository's commit notes).
+- **Android builds.** `./gradlew assembleDebug` produced `app-debug.apk` (about 4.3 MB) with JDK 21, Android SDK 36 and Gradle 8.14. `aapt2` inspection confirms:
+  - package `com.spritegen.mobile`, version 0.1.0, target SDK 36
+  - the network security config is applied
+  - the web app is bundled
+  - all five native plugins are registered
+- `cap sync` wires the same five plugins into the iOS Swift Package.
 
 **Not verified here**
 
